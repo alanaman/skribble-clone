@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skribble</title>
     <script src="https://cdn.socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        var room_name;
+    </script>
     <link href="styles.css" rel="stylesheet" />
 </head>
 <body>
@@ -24,11 +27,20 @@
             <input type="text" id="roomname" name="roomname" placeholder="Room Name" required>
             <p id="room_error"></p>
         </div>
-        <button id="create_room">Create room</button>
+        <button id="create_room_">Create room</button>
     </div>
     <div id="join_room" style="display: none;">
 
-        <button id="join_room">Join room</button>
+        <!-- <button id="join_rooom">Join room</button> -->
+    </div>
+    <div id="room_list" style="display: none;">
+        <label for="rooms">Choose a room</label>
+        <select id="rooms" name="rooms">
+        </select>
+        <input id="room_join" type="submit">
+    </div>
+    <div id="chat">
+        <!-- <hr> -->
     </div>
     <script src="/working.js"></script>
 </body>

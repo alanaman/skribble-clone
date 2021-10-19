@@ -1,3 +1,44 @@
-#error{
+#name_error{
     display: inline;
+}
+#register_window{
+    position: relative;
+    top: 180px;
+    left: 700px;
+    border-radius: 20px;
+    background-color: rgb(207, 255, 203);
+    border: 3px solid rgb(13, 160, 0);
+    padding: 20px;
+    width: 400px;
+    height: 400px;
+}
+#username{
+    border-radius: 5px;
+    border: 3px solid rgb(13, 160, 0);
+    position: absolute;
+    top: 130px;
+    left: 70px;
+    height: 50px;
+    width: 300px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 40px;
+    background-color: rgb(161, 255, 151);
+
+}
+#register{
+    border-radius: 5px;
+    border: 3px solid rgb(13, 160, 0);
+    width: 170px;
+    height: 70px;
+    position: absolute;
+    top: 230px;
+    left: 140px;
+    font-size: 50px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    background-color: rgb(161, 255, 151);
+    color: rgb(6, 70, 0);
+}
+::placeholder{
+    color: rgb(6, 70, 0);
+    opacity: 0.4;
 }
