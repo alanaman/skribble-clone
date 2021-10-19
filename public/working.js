@@ -5,7 +5,9 @@ var username = document.getElementById('username'),
     create_btn = document.getElementById("create_room_"),
     roomname = document.getElementById("roomname");
     join_btn = document.getElementById("room_join"),
-    join_name = document.getElementById("rooms");
+    join_name = document.getElementById("rooms"),
+    chat_div = document.getElementById("chat"),
+    chat_box = document.getElementById("chat-box");
 
 // emit eventss
 
@@ -34,13 +36,26 @@ create_btn.addEventListener('click', function(){
 
 join_btn.addEventListener('click',function() {
   let str=join_name.value;
-  console.log(str);
+  // console.log(str);
   str=str.trim();
   if(str==""){
     room_error.innerText="Room name must be non empty";
   }
   else{
     socket.emit('join_room',{room: join_name.value});
+  }
+})
+
+chat_box.children[1].addEventListener('click',function() {
+  let str=chat_box.children[0].value;
+  // console.log(str);
+  str=str.trim();
+  if(str==""){
+    room_error.innerText="Msg must be non empty";
+  }
+  else{
+    socket.emit('chat-msg',{msg: chat_box.children[0].value});
+    chat_box.children[0].value="";
   }
 })
 
@@ -81,13 +96,19 @@ socket.on('room_valid',function(data){
     let join_room_wind = document.getElementById("join_room");
     let name_disp = document.getElementById("name_display");
     let room_div = document.getElementById("room_list")
+    let chat_div = document.getElementById("chat");
+    let chat_box = document.getElementById("chat-box");
+    // let room_head = document.getElementById("room_name");
+    chat_div.style.display = "block";
+    chat_box.style.display = "block";
     name_disp.innerText=username.value;
     reg_wind.style.display = "none";
     profile_wind.style.display = "block";
     create_room_wind.style.display = "none";
     join_room_wind.style.display = "block";
     room_div.style.display = "none";
-    console.log("room created ")
+    // room_head.innerText = `Room: ${room_name}`;
+    // console.log("room created ")
   }
   else{
     room_error.innerText="Name already taken";
@@ -103,12 +124,12 @@ socket.on('room_added',function(data) {
 })
 
 socket.on('chat-msg',function(data){
-  console.log("Msg received");
+  // console.log("Msg received");
   let msg_div = document.getElementById("chat");
   let msg_elem = document.createElement("p");
   msg_elem.innerText = `${data.user}: ${data.msg}`;
   msg_div.appendChild(msg_elem);
-  console.log("msg processed");
+  // console.log("msg processed");
 })
 
 
