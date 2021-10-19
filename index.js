@@ -47,18 +47,19 @@ io.on('connection', function(socket){
             console.log("added room "+data.roomname);
             io.to(socket.id).emit('room_valid',{success: true, myroom: data.roomname});
             io.emit('room_added',{room : data.roomname});
+            io.to(data.roomname).emit('chat-msg',{user: socket.id,msg : "Joined the room"});
         }
     });
     socket.on("join_room",function(data) {
-        console.log(data.room,rooms[data.room],rooms);
-        if(rooms[data.room]==null){
+        console.log(rooms.includes(data.room));
+        if(!rooms.includes(data.room)){
             io.to(socket.id).emit('join_room_valid',{success: false});
             // console.log("Not this one");
         }
         else {
-            socket.join(data.roomname);
-            io.to(socket.id).emit('join_room_valid',{success: true, myroom: data.roomname});
-            io.to(data.roomname).emit('chat-msg',{user: socket.id,msg : "Joined the room"});
+            socket.join(data.room);
+            io.to(socket.id).emit('join_room_valid',{success: true, user: socket.id,msg : "Joined the room"});
+            io.to(data.room).emit('chat-msg',{user: socket.id,msg : "Joined the room"});
         }
     })
 });

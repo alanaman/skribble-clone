@@ -13,7 +13,7 @@ reg_btn.addEventListener('click', function(){
   let str=username.value;
   str=str.trim();
   if(str==""){
-    room_error.innerText="Name must be non empty";
+    name_error.innerText="Name must be non empty";
   }
   else{
     socket.emit('new_player',{username: username.value});
@@ -40,7 +40,7 @@ join_btn.addEventListener('click',function() {
     room_error.innerText="Room name must be non empty";
   }
   else{
-    socket.emit('join_room',{room: join_name.id});
+    socket.emit('join_room',{room: join_name.value});
   }
 })
 
@@ -64,12 +64,11 @@ socket.on('validation',function(data){
       opt = document.createElement("option");
       // btn.id = "join_room";
       opt.innerText = data.rooms[room];
-      opt.id = room;
       room_list.appendChild(opt);
     }
   }
   else{
-    room_error.innerText="Name already taken";
+    name_error.innerText="Name already taken";
   }
 });
 
@@ -99,18 +98,18 @@ socket.on('room_added',function(data) {
   let room_list = document.getElementById("rooms");
   opt = document.createElement("option");
   // btn.id = "join_room";
-  opt.innerText = `Room : ${data.room}`;
+  opt.innerText = data.room;
   room_list.appendChild(opt);
 })
 
 socket.on('chat-msg',function(data){
-  addmsg(data.user,data.msg);
+  console.log("Msg received");
+  let msg_div = document.getElementById("chat");
+  let msg_elem = document.createElement("p");
+  msg_elem.innerText = `${data.user}: ${data.msg}`;
+  msg_div.appendChild(msg_elem);
+  console.log("msg processed");
 })
 
-function addmsg(user,msg) {
-  msg_div = document.getElementById("chat");
-  msg_elem = document.createElement("p");
-  package.innerText(`${user}: ${msg}`);
-  msg_div.appendChild(msg_elem);
-}
+
 // socket.emit('create','room1')
