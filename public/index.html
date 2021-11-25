@@ -22,22 +22,35 @@
     <div id="user_prof" style="display: none;">
         <h1 id="name_display"></h1>
     </div>
-    <div id="create_room" style="display: none;">
+    <div id="create_room" style="display: none;padding : 10px;">
         <div>
             <input type="text" id="roomname" name="roomname" placeholder="Room Name" required>
             <p id="room_error"></p>
         </div>
-        <button id="create_room_">Create room</button>
+        <button id="create_room_public">Create public room</button>
+    </div>
+    <div id="private_create_room" style="display: none;padding : 10px;">
+        <div>
+            <input type="text" id="private_roomname" name="roomname" placeholder="Room Name" required>
+            <input type="text" id="private_roomname_key" name="roomname_key" placeholder="Key" required>
+            <p id="room_error"></p>
+        </div>
+        <button id="create_room_private">Create private room</button>
     </div>
     <div id="join_room" style="display: none;">
 
         <!-- <button id="join_rooom">Join room</button> -->
     </div>
+    <div id="join_private_room" style="display: none;border-width: 1px;">
+        <input type="text" id="pvt_room" name="roomname" placeholder="Room Name" required>
+        <input type="text" id="pvt_room_key" name="roomname_key" placeholder="Key" required>
+        <button id="join_pvt_room">Join</button>
+    </div>
     <div id="room_list" style="display: none;">
         <label for="rooms">Choose a room</label>
         <select id="rooms" name="rooms">
         </select>
-        <input id="room_join" type="submit">
+        <input id="room_join" type="submit" value="Join">
     </div>
     <h2 id="room_name"></h2>
     <div id="chat" style="display: none;">

@@ -2,14 +2,18 @@ var socket = io.connect('http://localhost:3999')
 var username = document.getElementById('username'),
     reg_btn = document.getElementById('register'),
     room_error = document.getElementById("room_error"),
-    create_btn = document.getElementById("create_room_"),
+    create_public_btn = document.getElementById("create_room_public"),
+    create_private_btn = document.getElementById("create_room_private"),
     roomname = document.getElementById("roomname"),
+    pvt_roomname = document.getElementById("private_roomname"),
+    room_key = document.getElementById("private_roomname_key"),
     join_btn = document.getElementById("room_join"),
     join_name = document.getElementById("rooms"),
     chat_div = document.getElementById("chat"),
     chat_box = document.getElementById("chat-box"),
-    drawing_div = document.getElementById("drawing-board");
-    palette_div =document.getElementById("palette")
+    drawing_div = document.getElementById("drawing-board"),
+    palette_div =document.getElementById("palette"),
+    join_pvt_btn = document.getElementById("join_pvt_room");
 const myPics = document.getElementById('myPics');
 const context = myPics.getContext('2d');
    
@@ -27,7 +31,7 @@ reg_btn.addEventListener('click', function(){
   }
 });
 
-create_btn.addEventListener('click', function(){
+create_public_btn.addEventListener('click', function(){
   let str=roomname.value;
   str=str.trim();
   if(str==""){
@@ -35,7 +39,23 @@ create_btn.addEventListener('click', function(){
   }
   else{
     // room_name = roomname.value;
-    socket.emit('new_room',{roomname: roomname.value});
+    socket.emit('new_room',{roomname: roomname.value, room_key: null});
+  }
+});
+
+create_private_btn.addEventListener('click', function(){
+  let str=pvt_roomname.value;
+  let key_str = room_key.value;
+  str=str.trim();
+  if(str===""){
+    room_error.innerText="Room name must be non empty";
+  }
+  else if(key_str.trim()===""){
+    room_error.innerText="Invalid Key";
+  }
+  else{
+    // room_name = roomname.value;
+    socket.emit('new_room',{roomname: pvt_roomname.value , room_key: room_key.value});
   }
 });
 
@@ -48,6 +68,20 @@ join_btn.addEventListener('click',function() {
   }
   else{
     socket.emit('join_room',{room: join_name.value});
+  }
+})
+
+join_pvt_btn.addEventListener('click',function(){
+  let pvt_room_name = document.getElementById("pvt_room");
+  let pvt_room_key = document.getElementById("pvt_room_key");
+  let name = pvt_room_name.value;
+  let key = pvt_room_key.value;
+  if(name.trim()===""){
+    room_error.innerText = "Room name must not be empty";
+  }else if(key.trim()===""){
+    room_error.innerText = "Invalid key";
+  }else{
+    socket.emit('join_room',{room: pvt_room_name.value,key: pvt_room_key.value});
   }
 })
 
@@ -72,16 +106,20 @@ socket.on('validation',function(data){
     let reg_wind = document.getElementById("register_window");
     let profile_wind = document.getElementById("user_prof");
     let create_room_wind = document.getElementById("create_room");
+    let create_pvt_room_wind = document.getElementById("private_create_room");
     let join_room_wind = document.getElementById("join_room");
     let name_disp = document.getElementById("name_display");
     let room_list = document.getElementById("rooms");
-    let room_div = document.getElementById("room_list")
+    let room_div = document.getElementById("room_list");
+    let pvt_room_div = document.getElementById("join_private_room");
     name_disp.innerText=username.value;
     reg_wind.style.display = "none";
     profile_wind.style.display = "block";
     create_room_wind.style.display = "block";
+    create_pvt_room_wind.style.display = "block";
     join_room_wind.style.display = "block";
     room_div.style.display = "block";
+    pvt_room_div.style.display = "block";
     for(room in data.rooms){
       opt = document.createElement("option");
       // btn.id = "join_room";
@@ -100,12 +138,14 @@ socket.on('room_valid',function(data){
     let reg_wind = document.getElementById("register_window");
     let profile_wind = document.getElementById("user_prof");
     let create_room_wind = document.getElementById("create_room");
+    let create_pvt_room_wind = document.getElementById("private_create_room");
     let join_room_wind = document.getElementById("join_room");
     let name_disp = document.getElementById("name_display");
     let room_div = document.getElementById("room_list")
     let chat_div = document.getElementById("chat");
     let chat_box = document.getElementById("chat-box");
     let drawing_div = document.getElementById("drawing-board");
+    let pvt_room_div = document.getElementById("join_private_room");
     // let room_head = document.getElementById("room_name");
     chat_div.style.display = "block";
     chat_box.style.display = "block";
@@ -113,10 +153,12 @@ socket.on('room_valid',function(data){
     reg_wind.style.display = "none";
     profile_wind.style.display = "block";
     create_room_wind.style.display = "none";
+    create_pvt_room_wind.style.display = "none";
     join_room_wind.style.display = "block";
     room_div.style.display = "none";
     drawing_div.style.display = "block";
     palette_div.style.display = "block";
+    pvt_room_div.style.display = "none";
     // room_head.innerText = `Room: ${room_name}`;
     // console.log("room created ")
   }
