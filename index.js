@@ -95,6 +95,14 @@ io.on('connection', function(socket){
         io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : data.msg})
     })
 
+    socket.on("draw",function(data){
+        io.to(p_rooms[socket.id]).emit("draw",data)
+    })
+
+    socket.on("clear",function(){
+        io.to(p_rooms[socket.id]).emit("clear")
+    })
+
     socket.on('disconnect',()=>{
         if(socket.to(p_rooms[socket.id])!=null){
         socket.to(p_rooms[socket.id]).emit('chat-msg',{user: players[socket.id],msg : "Disconnected"});
