@@ -1,11 +1,30 @@
 var express = require('express');
-var socket = require('socket.io')
+var socket = require('socket.io');
+var fs = require('fs');
 //App setup
 var app = express();
 var server = app.listen(3999, function(){
     // console.log('listening to port');
 });
 
+function rand_word(word_list, n){
+    for(let i=0; i<n; i++){
+        var r = Math.floor(Math.random() * (word_list.length-i)) + i;
+        var temp = word_list[i];
+        word_list[i] = word_list[r];
+        word_list[r] = temp;
+    }
+    return word_list.slice(0,n); 
+}
+
+
+var words;
+
+fs.readFile('public/wordlist.txt','utf8', function(err,data){
+    if(err) throw err;
+    words = data.split('\n');
+    console.log(rand_word(words,3));
+})
 //static files
 app.use(express.static('public'));
 
@@ -25,6 +44,10 @@ players={};
 p_rooms={};
 rooms = [];
 count = {};
+
+var active = {};
+var init_time = {};
+var now = new Date();
 
 
 io.on('connection', function(socket){
