@@ -50,12 +50,29 @@
         <label for="rooms">Choose a room</label>
         <select id="rooms" name="rooms">
         </select>
-        <input id="room_join" type="submit" value="Join">
+        <input id="room_join" type="submit" value="join">
     </div>
     <h2 id="room_name"></h2>
+    <div id="timer" style="display: none">
+        
+    </div>
     <div id="chat" style="display: none;">
 
     </div>
+    <div id="lobby" style="display: none;">
+        <button type="submit">Start Game</button> 
+    </div>
+    <div id="playerlist" style="display: none;">
+    </div>
+    <div id="words" style="display: none;">
+        <button id="word1" type="submit"></button>
+        <button id="word2" type="submit"></button>
+        <button id="word3" type="submit"></button>
+    </div>
+    <div id="headers" style="display :none;">
+        <p id="round_no"></p>
+        <p id="action"></p>
+    </div> 
     <div id="chat-box" style="display: none;">
         <input type="text" name="msg" placeholder="Type your msg here" required>
         <button type="submit">Send</button>

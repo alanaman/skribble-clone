@@ -1,4 +1,4 @@
-var socket = io.connect('http://localhost:3999')
+var socket = io.connect('http://localhost:3999') //connecting to server
 var username = document.getElementById('username'),
     reg_btn = document.getElementById('register'),
     room_error = document.getElementById("room_error"),
@@ -12,14 +12,17 @@ var username = document.getElementById('username'),
     chat_div = document.getElementById("chat"),
     chat_box = document.getElementById("chat-box"),
     drawing_div = document.getElementById("drawing-board"),
-    palette_div =document.getElementById("palette"),
+    palette_div = document.getElementById("palette"),
     join_pvt_btn = document.getElementById("join_pvt_room");
+    game_start_btn = document.getElementById("lobby"),
+    word1_btn = document.getElementById("word1"),
+    word2_btn = document.getElementById("word2"),
+    word3_btn = document.getElementById("word3");
 const myPics = document.getElementById('myPics');
 const context = myPics.getContext('2d');
-   
+let room_data = {};
 
-// emit eventss
-
+//Button to register username
 reg_btn.addEventListener('click', function(){
   let str=username.value;
   str=str.trim();
@@ -31,6 +34,7 @@ reg_btn.addEventListener('click', function(){
   }
 });
 
+//Button to register a room
 create_public_btn.addEventListener('click', function(){
   let str=roomname.value;
   str=str.trim();
@@ -59,9 +63,9 @@ create_private_btn.addEventListener('click', function(){
   }
 });
 
+//Button to join a room 
 join_btn.addEventListener('click',function() {
   let str=join_name.value;
-  // console.log(str);
   str=str.trim();
   if(str==""){
     room_error.innerText="Room name must be non empty";
@@ -70,7 +74,6 @@ join_btn.addEventListener('click',function() {
     socket.emit('join_room',{room: join_name.value});
   }
 })
-
 join_pvt_btn.addEventListener('click',function(){
   let pvt_room_name = document.getElementById("pvt_room");
   let pvt_room_key = document.getElementById("pvt_room_key");
@@ -83,16 +86,15 @@ join_pvt_btn.addEventListener('click',function(){
   }else{
     socket.emit('join_room',{room: pvt_room_name.value,key: pvt_room_key.value});
   }
-})
+});
 
 
-
+//Code to send message through chatbox
 chat_box.children[1].addEventListener('click',function() {
   let str=chat_box.children[0].value;
-  // console.log(str);
   str=str.trim();
   if(str==""){
-    room_error.innerText="Msg must be non empty";
+    room_error.innerText="Message must be non empty";
   }
   else{
     socket.emit('chat-msg',{msg: chat_box.children[0].value});
@@ -100,7 +102,27 @@ chat_box.children[1].addEventListener('click',function() {
   }
 })
 
+//starting the game
+game_start_btn.addEventListener('click',function(){
+    socket.emit('start_game');
+})
 
+//handling the random word button
+word1_btn.addEventListener('click',function(){
+  room_data.words=word1_btn.innerText;
+  socket.emit('chosen',room_data)
+})
+word2_btn.addEventListener('click',function(){
+  room_data.words=word2_btn.innerText;
+  socket.emit('chosen',room_data)
+})
+word3_btn.addEventListener('click',function(){
+  room_data.words=word3_btn.innerText;
+  socket.emit('chosen',room_data)
+})
+
+
+//Taking a valid user to the lobby to create or join a room
 socket.on('validation',function(data){
   if(data.success){
     let reg_wind = document.getElementById("register_window");
@@ -122,7 +144,6 @@ socket.on('validation',function(data){
     pvt_room_div.style.display = "block";
     for(room in data.rooms){
       opt = document.createElement("option");
-      // btn.id = "join_room";
       opt.innerText = data.rooms[room];
       room_list.appendChild(opt);
     }
@@ -132,9 +153,9 @@ socket.on('validation',function(data){
   }
 });
 
+//Taking a valid user to the room lobby
 socket.on('room_valid',function(data){
   if(data.success){
-    room_name = data.myroom;
     let reg_wind = document.getElementById("register_window");
     let profile_wind = document.getElementById("user_prof");
     let create_room_wind = document.getElementById("create_room");
@@ -146,69 +167,198 @@ socket.on('room_valid',function(data){
     let chat_box = document.getElementById("chat-box");
     let drawing_div = document.getElementById("drawing-board");
     let pvt_room_div = document.getElementById("join_private_room");
-    // let room_head = document.getElementById("room_name");
-    chat_div.style.display = "block";
-    chat_box.style.display = "block";
+    let lobby_div = document.getElementById("lobby");
+    let plr_list = document.getElementById("playerlist");
+    let header = document.getElementById("headers");
     name_disp.innerText=username.value;
     reg_wind.style.display = "none";
-    profile_wind.style.display = "block";
+    profile_wind.style.display = "none";
+    join_room_wind.style.display = "none";
     create_room_wind.style.display = "none";
-    create_pvt_room_wind.style.display = "none";
-    join_room_wind.style.display = "block";
-    room_div.style.display = "none";
-    drawing_div.style.display = "block";
-    palette_div.style.display = "block";
     pvt_room_div.style.display = "none";
-    // room_head.innerText = `Room: ${room_name}`;
-    // console.log("room created ")
+    room_div.style.display = "none";
+    create_pvt_room_wind.style.display="none";
+    plr_list.style.display = "block";
+    if(!data.started){
+      room_name = data.myroom;
+      chat_div.style.display = "none";
+      chat_box.style.display = "none";
+      drawing_div.style.display = "none";
+      palette_div.style.display = "none";
+      lobby_div.style.display = "block";
+    }
+    else{
+      if(data.action=="choosing"){
+        canvas_clear();
+        document.getElementById("words").style.display = "none";
+        document.getElementById("drawing-board").style.display = "none";
+        document.getElementById("palette").style.display = "none";
+        document.getElementById("action").innerText = "player is choosing a word";
+        document.getElementById("chat").style.display = "block";
+        document.getElementById("chat-box").style.display = "block";
+        header.style.display = "block";
+      }
+      else if(data.action=="drawing"){
+        document.getElementById("words").style.display = "none";
+        document.getElementById("drawing-board").style.display = "block";
+        document.getElementById("palette").style.display = "block";
+        document.getElementById("action").innerText = "guess the word";
+        document.getElementById("chat").style.display = "block";
+        document.getElementById("chat-box").style.display = "block";
+        header.style.display = "block"; 
+      }
+     }
   }
   else{
     room_error.innerText="Name already taken";
   }
 });
 
+//updating players in a room
+socket.on('players_list_update',function(data){
+  plr_list = document.getElementById("playerlist");
+  plr_list.innerText = "";
+  for(let i=1;i<=data.count;i++){
+      plr_list.innerHTML += "<p>"+data.players[i-1]+"</p>";
+  }
+});
+//Adding newly created rooms to the drop-down box to all players 
 socket.on('room_added',function(data) {
   let room_list = document.getElementById("rooms");
   opt = document.createElement("option");
-  // btn.id = "join_room";
   opt.innerText = data.room;
   room_list.appendChild(opt);
-})
+});
 
+//handling game_state signal
+socket.on('game_state',function(data){
+  console.log(data);
+  room_data=data;
+  if(data.curr_PIR[data.artist_index]==username.value){
+    if(data.action=="choosing"){
+      canvas_clear();
+      document.getElementById("word1").innerText = data.words[0];
+      document.getElementById("word2").innerText = data.words[1];
+      document.getElementById("word3").innerText = data.words[2];
+      document.getElementById("words").style.display = "block";
+      document.getElementById("drawing-board").style.display = "none";
+      document.getElementById("palette").style.display = "none";
+      document.getElementById("action").innerText = "choose a word";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("chat-box").style.display = "block";
+    }
+    if(data.action=="drawing"){
+      document.getElementById("words").style.display = "none";
+      document.getElementById("drawing-board").style.display = "block";
+      document.getElementById("palette").style.display = "block";
+      document.getElementById("action").innerText = "draw the word";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("chat-box").style.display = "block";
+    }
+  }
+  else{
+    if(data.action=="choosing"){
+      canvas_clear();
+      document.getElementById("words").style.display = "none";
+      document.getElementById("drawing-board").style.display = "none";
+      document.getElementById("palette").style.display = "none";
+      document.getElementById("action").innerText = "player is choosing a word";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("chat-box").style.display = "block";
+    }
+    if(data.action=="drawing"){
+      document.getElementById("words").style.display = "none";
+      document.getElementById("drawing-board").style.display = "block";
+      document.getElementById("palette").style.display = "block";
+      document.getElementById("action").innerText = "guess the word";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("chat-box").style.display = "block";
+    }
+  }
+});
+
+//Creating timer
+var countDownDate = new Date("Jan 5, 2022 15:37:25").getTime();
+var T = setInterval(function() {
+
+  // Get today's date and time
+  var now = new Date().getTime();
+
+  // Find the distance between now and the count down date
+  var distance = countDownDate - now;
+
+  // Time calculations for days, hours, minutes and seconds
+  
+  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+  // Display the result in the element with id="demo"
+  document.getElementById("timer").innerHTML =  seconds + "s ";
+
+  // If the count down is finished, write some text
+  if (distance < 0) {
+    clearInterval(T);
+    document.getElementById("timer").innerHTML = "EXPIRED";
+  }
+}, 1000);
+
+//Displaying the chat content to all users in the room
 socket.on('chat-msg',function(data){
-  // console.log("Msg received");
   let msg_div = document.getElementById("chat");
   let msg_elem = document.createElement("p");
   msg_elem.innerText = `${data.user}: ${data.msg}`;
   msg_div.appendChild(msg_elem);
   var xH = msg_div.scrollHeight; 
   msg_div.scrollTo(0, xH);
-  // console.log("msg processed");
-})
+});
 
+//handling game start
+socket.on('start',function(){
+  let reg_wind = document.getElementById("register_window");
+  let profile_wind = document.getElementById("user_prof");
+  let create_room_wind = document.getElementById("create_room");
+  let join_room_wind = document.getElementById("join_room");
+  let name_disp = document.getElementById("name_display");
+  let room_div = document.getElementById("room_list")
+  let chat_div = document.getElementById("chat");
+  let chat_box = document.getElementById("chat-box");
+  let drawing_div = document.getElementById("drawing-board");
+  let lobby_div = document.getElementById("lobby");
+  let plr_list = document.getElementById("playerlist");
+  let timer_div = document.getElementById("timer");
+  chat_div.style.display = "block";
+  chat_box.style.display = "block";
+  name_disp.innerText=username.value;
+  reg_wind.style.display = "none";
+  profile_wind.style.display = "none";
+  create_room_wind.style.display = "none";
+  join_room_wind.style.display = "none";
+  room_div.style.display = "none";
+  drawing_div.style.display = "block";
+  palette_div.style.display = "block";
+  lobby_div.style.display = "none";
+  plr_list.style.display = "block";
+  timer_div.style.display = "block"
+  document.getElementById("headers").style.display = "block";
+});
 
-// canvas functions:
+//canvas functions
 let isDrawing = false;
 let x = 0;
 let y = 0;
-// event.offsetX, event.offsetY gives the (x,y) offset from the edge of the canvas.
 
-// Add the event listeners for mousedown, mousemove, and mouseup
+//taking mouse input
 myPics.addEventListener('mousedown', e => {
   x = e.offsetX;
   y = e.offsetY;
   isDrawing = true;
 });
-
 myPics.addEventListener('mousemove', e => {
   if (isDrawing === true) {
-    //drawLine(context, x, y, e.offsetX, e.offsetY);
     socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width});
     x = e.offsetX;
     y = e.offsetY;
   }
 });
-
 window.addEventListener('mouseup', e => {
   if (isDrawing === true) {
     socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width});
@@ -218,6 +368,7 @@ window.addEventListener('mouseup', e => {
   }
 });
 
+//drawing in local canvas
 function drawLine(context, x1, y1, x2, y2,C,W) {
   context.beginPath();
   context.strokeStyle = C;
@@ -232,6 +383,7 @@ function drawLine(context, x1, y1, x2, y2,C,W) {
   context.closePath();
 }
 
+//clearing the canvas
 function canvas_clear(){
 context.beginPath();
 context.rect(0, 0, 700, 500);
@@ -239,15 +391,17 @@ context.fillStyle = "white";
 context.fill();
 }
 
+//handling draw signal
 socket.on('draw',function(data){
    drawLine(context,data.x1,data.y1,data.x2,data.y2,data.draw_color,data.draw_width);
 })
 
+//handling clear signal
 socket.on('clear',function(){
   canvas_clear();
 })
 
-//choosing colour
+//handling color and size
 let curr_color = 'black';
 var red=document.getElementById('red');
     blue=document.getElementById('blue');
@@ -299,3 +453,32 @@ white.addEventListener('click',function(){
   curr_color='white';
 });
 
+//handling the end-game signal
+socket.on('end-game',function(){
+  let reg_wind = document.getElementById("register_window");
+  let profile_wind = document.getElementById("user_prof");
+  let create_room_wind = document.getElementById("create_room");
+  let join_room_wind = document.getElementById("join_room");
+  let name_disp = document.getElementById("name_display");
+  let room_div = document.getElementById("room_list")
+  let chat_div = document.getElementById("chat");
+  let chat_box = document.getElementById("chat-box");
+  let drawing_div = document.getElementById("drawing-board");
+  let lobby_div = document.getElementById("lobby");
+  let plr_list = document.getElementById("playerlist");
+  let timer_div = document.getElementById("timer");
+  chat_div.style.display = "none";
+  chat_box.style.display = "none";
+  name_disp.innerText=username.value;
+  reg_wind.style.display = "none";
+  profile_wind.style.display = "none";
+  create_room_wind.style.display = "none";
+  join_room_wind.style.display = "none";
+  room_div.style.display = "none";
+  drawing_div.style.display = "none";
+  palette_div.style.display = "none";
+  lobby_div.style.display = "block";
+  plr_list.style.display = "block";
+  timer_div.style.display = "none"
+  document.getElementById("headers").style.display = "block";
+})
