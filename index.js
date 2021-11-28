@@ -49,8 +49,8 @@ players_in_a_room = {}; //room to player mapping
 creator_room = {};      //room to creator mapping
 started = {};           //game started in a room or not
 game_state = {};        //state of a started game
-scores = {};            //socket.id -> scores mapping
-guess_count = {};
+scores = {};            //socket.id -> scores mapping [round1 , r2, r3]
+guess_count = {};       //room -> correct guesses of words(resets to zero after evry turn)
 
 var active = {};
 var init_time = {};
