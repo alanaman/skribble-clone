@@ -139,7 +139,7 @@ io.on('connection', function(socket){
 
     socket.on("chat-msg",function(data) {
         if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]!==players[socket.id]){
-            if(game_state[p_rooms[socket.id]].words==(data.msg)){
+            if(game_state[p_rooms[socket.id]].words.toLowerCase()==(data.msg.toLowerCase())){
                 io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : players[socket.id] + " guessed correctly"});
                 if(!guessed[socket.id]){
                     scores[players[socket.id]][game_state[p_rooms[socket.id]].round-1]+=10;
@@ -308,4 +308,19 @@ function word_format(word){
         }
     }
     return char_arr.join("");
+}
+
+function leader_board(dict){
+    var items = Object.keys(dict).map(function(key) {
+        return [key, dict[key]];
+      });
+      
+      // Sort the array based on the second element
+      items.sort(function(first, second) {
+        return second[1] - first[1];
+      });
+      
+      // Create a new array with only the first 5 items
+      if(items.length>10) return items.slice(0, 10);
+      return items;
 }
