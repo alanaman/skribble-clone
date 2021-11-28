@@ -143,7 +143,7 @@ io.on('connection', function(socket){
     });
 
     socket.on("chat-msg",function(data) {
-        if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]!==players[socket.id]){
+        if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]!==players[socket.id] && !guessed[socket.id]){
             if(game_state[p_rooms[socket.id]].words.toLowerCase()==(data.msg.toLowerCase())){
                 io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : players[socket.id] + " guessed correctly"});
                 if(!guessed[socket.id]){
