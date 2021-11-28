@@ -135,6 +135,9 @@ socket.on('validation',function(data){
     let room_list = document.getElementById("rooms");
     let room_div = document.getElementById("room_list");
     let pvt_room_div = document.getElementById("join_private_room");
+    let leader_board = document.getElementById("leader_board");
+    leader_board.style.display = "block";
+    leader_board.style.width = "50%";
     name_disp.innerText=username.value;
     reg_wind.style.display = "none";
     profile_wind.style.display = "block";
@@ -171,6 +174,8 @@ socket.on('room_valid',function(data){
     let lobby_div = document.getElementById("lobby");
     let plr_list = document.getElementById("playerlist");
     let header = document.getElementById("headers");
+    let leader_board = document.getElementById("leader_board");
+    leader_board.style.display = "none";
     name_disp.innerText=username.value;
     reg_wind.style.display = "none";
     profile_wind.style.display = "none";
@@ -477,6 +482,17 @@ black.addEventListener('click',function(){
 white.addEventListener('click',function(){
   curr_color='white';
 });
+
+socket.on("leader_board",function(data){
+  let leader_board = document.getElementById("leader_board");
+  leader_board.style.backgroundColor = "white";
+  leader_board.style.padding = "2px";
+  leader_board.innerHTML = "<h2> LEADERBOARD </h2>";
+  leader_board.innerHTML += "<p> Username => Scores </p>";
+  for(let i=0;i<data.board.length;i++){
+    leader_board.innerHTML += "<p>" + data.board[i][0] + " => " + data.board[i][1] + "</p>";
+  }
+})
 
 //handling the end-game signal
 socket.on('game_ended',function(data){

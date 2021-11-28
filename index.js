@@ -70,6 +70,7 @@ io.on('connection', function(socket){
             sockets_map[data.username] = socket.id;
             io.to(socket.id).emit('validation',{success: true, rooms: public_rooms});      
             guessed[socket.id] = false;                            
+            io.emit("leader_board",{board: leader_board(scores)});
         }
     });
     socket.on('new_room',function(data){
@@ -97,6 +98,7 @@ io.on('connection', function(socket){
             io.emit('room_added',{room : data.roomname});
             io.to(data.roomname).emit('chat-msg',{user: players[socket.id],msg : "You joined the room"});
             io.to(data.roomname).emit('players_list_update',{players : players_in_a_room[data.roomname],count : count[data.roomname],scores: scores});
+            io.emit("leader_board",{board: leader_board(scores)});
         }
     });
     socket.on("join_room",function(data) {
@@ -117,6 +119,7 @@ io.on('connection', function(socket){
             }
             io.to(data.room).emit('chat-msg',{user: players[socket.id],msg : "Joined the room"});
             io.to(data.room).emit('players_list_update',{players : players_in_a_room[data.room],count : count[data.room],scores: scores});
+            io.emit("leader_board",{board: leader_board(scores)}); 
         }
         else if(room_keys[data.room]!==data.key){
             io.to(socket.id).emit('room_valid',{success: false,msg: "incorrect key"});
@@ -125,6 +128,7 @@ io.on('connection', function(socket){
             socket.join(data.room);
             count[data.room] += 1;
             p_rooms[socket.id]=data.room;
+            scores[players[socket.id]] = [0,0,0];
             players_in_a_room[data.room].push(players[socket.id]);
             if(started[data.room]){
                 io.to(socket.id).emit('room_valid',{success: true, user: socket.id,msg : "Joined the room",started: started[data.room],action: game_state[p_rooms[socket.id]].action});
@@ -134,6 +138,7 @@ io.on('connection', function(socket){
             }
             io.to(data.room).emit('chat-msg',{user: players[socket.id],msg : "Joined the room"});
             io.to(data.room).emit('players_list_update',{players : players_in_a_room[data.room],count : count[data.room],scores: scores});
+            io.emit("leader_board",{board: leader_board(scores)}); 
         }
     });
 
@@ -147,6 +152,7 @@ io.on('connection', function(socket){
                     guess_count[p_rooms[socket.id]]+=1;
                     guessed[socket.id] = true;
                     io.to(p_rooms[socket.id]).emit('players_list_update',{players : players_in_a_room[p_rooms[socket.id]],count : count[p_rooms[socket.id]],scores: scores});
+                    io.emit("leader_board",{board: leader_board(scores)});
                 }
             }
             else io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : data.msg});
@@ -194,6 +200,9 @@ io.on('connection', function(socket){
         io.to(p_rooms[socket.id]).emit("clock_start",{cur_time: new Date().getTime()});
         
         setTimeout(function(){
+            scores[players_in_a_room[p_rooms[socket.id]][data.artist_index]][data.round-1] += Math.floor(guess_count[p_rooms[socket.id]]*15/count[p_rooms[socket.id]]);
+            guess_count[p_rooms[socket.id]] = 0;
+            io.to(data.room).emit('players_list_update',{players : players_in_a_room[data.room],count : count[data.room],scores: scores});
            if(data.curr_PIR.length>(data.artist_index+1)){
             game_state[p_rooms[socket.id]]={round: data.round,action: "choosing",curr_PIR: data.curr_PIR,words: rand_word(words,3),artist_index: data.artist_index+1};
             io.to(p_rooms[socket.id]).emit("game_state",{round: data.round,action: "choosing",curr_PIR: data.curr_PIR,words: game_state[p_rooms[socket.id]].words,artist_index: data.artist_index+1});
@@ -224,9 +233,6 @@ io.on('connection', function(socket){
             delete game_state[p_rooms[socket.id]];
             io.to(p_rooms[socket.id]).emit("game_ended",{scores: scores});
            }
-           scores[players_in_a_room[p_rooms[socket.id]][data.artist_index]][data.round-1] += Math.floor(guess_count[p_rooms[socket.id]]*15/count[p_rooms[socket.id]]);
-        guess_count[p_rooms[socket.id]] = 0;
-        io.to(data.room).emit('players_list_update',{players : players_in_a_room[data.room],count : count[data.room],scores: scores});
         },30000);
     });
 
@@ -252,13 +258,16 @@ io.on('connection', function(socket){
             if(count[p_rooms[socket.id]]==0) delete private_rooms[private_rooms.indexOf(p_rooms[socket.id])];
         }
         refine_rooms();
+        delete sockets_map[players[socket.id]];
+        delete scores[players[socket.id]];
         if(players[socket.id]==creator_room[p_rooms[socket.id]]&&(count[p_rooms[socket.id]]>0)){
             delete players[socket.id];
             creator_room[p_rooms[socket.id]]=players_in_a_room[p_rooms[socket.id]][0];
         }
         else{
             delete players[socket.id]; 
-        }  
+        }
+        io.emit("leader_board",{board: leader_board(scores)});  
     });
     function watch(countDownDate,timer){
       
@@ -312,7 +321,7 @@ function word_format(word){
 
 function leader_board(dict){
     var items = Object.keys(dict).map(function(key) {
-        return [key, dict[key]];
+        return [key, dict[key].reduce(function(a,b){ return a+b;},0)];
       });
       
       // Sort the array based on the second element
@@ -321,6 +330,6 @@ function leader_board(dict){
       });
       
       // Create a new array with only the first 5 items
-      if(items.length>10) return items.slice(0, 10);
+      if(items.length>5) return items.slice(0, 5);
       return items;
 }
