@@ -220,7 +220,7 @@ socket.on('players_list_update',function(data){
   plr_list = document.getElementById("playerlist");
   plr_list.innerText = "";
   for(let i=1;i<=data.count;i++){
-      plr_list.innerHTML += "<p>"+data.players[i-1]+" : "+data.scores[data.players[i-1]]+"</p>";
+      plr_list.innerHTML += "<p>"+data.players[i-1]+" : "+data.scores[data.players[i-1]].reduce(function(a,b){return a+b;},0)+"</p>";
   }
 });
 //Adding newly created rooms to the drop-down box to all players 
@@ -506,5 +506,6 @@ socket.on('game_ended',function(data){
   plr_list.style.display = "block";
   timer_div.style.display = "none"
   document.getElementById("headers").style.display = "block";
+  chosen_word.style.display = "none";
   console.log(data.scores);
 })

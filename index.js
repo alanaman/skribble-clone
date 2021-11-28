@@ -143,6 +143,7 @@ io.on('connection', function(socket){
                 io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : players[socket.id] + " guessed correctly"});
                 if(!guessed[socket.id]){
                     scores[players[socket.id]][game_state[p_rooms[socket.id]].round-1]+=10;
+                    scores[players[socket.id]][game_state[p_rooms[socket.id]].round-1]-=guess_count[p_rooms[socket.id]];
                     guess_count[p_rooms[socket.id]]+=1;
                     guessed[socket.id] = true;
                     io.to(p_rooms[socket.id]).emit('players_list_update',{players : players_in_a_room[p_rooms[socket.id]],count : count[p_rooms[socket.id]],scores: scores});
