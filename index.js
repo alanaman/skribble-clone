@@ -55,6 +55,7 @@ scores = {};            //socket.id -> scores mapping [round1 , r2, r3]
 guess_count = {};       //room -> correct guesses of words(resets to zero after evry turn)
 guessed = {};           //username -> 
 kick_map = {};          //room _>jhk
+canvas_state = {};
 
 var active = {};
 var init_time = {};
@@ -114,8 +115,9 @@ io.on('connection', function(socket){
             p_rooms[socket.id]=data.room;
             scores[players[socket.id]] = [0,0,0];
             players_in_a_room[data.room].push(players[socket.id]);
-            if(started[data.room]){
-                io.to(socket.id).emit('room_valid',{success: true, user: socket.id,msg : "Joined the room",started: started[data.room],action: game_state[p_rooms[socket.id]].action});
+            if(started[data.room]){00
+                io.to(socket.id).emit('room_valid',{success: true, user: socket.id,msg : "Joined the room",started: started[data.room],action: game_state[p_rooms[socket.id]].action,image_data : canvas_state[p_rooms[socket.id]]});
+                console.log(game_state[p_rooms[socket.id]]);
             }
             else{
                 io.to(socket.id).emit('room_valid',{success: true, user: socket.id,msg : "Joined the room",started: false,action: null});
@@ -164,7 +166,10 @@ io.on('connection', function(socket){
     });
 
     socket.on("draw",function(data){
-        if(game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]==players[socket.id]) io.to(p_rooms[socket.id]).emit("draw",data);
+        if(game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]==players[socket.id]){
+            io.to(p_rooms[socket.id]).emit("draw",data);
+            canvas_state[p_rooms[socket.id]] = data.image_data;
+        }
     });
 
     socket.on("clear",function(){
@@ -200,6 +205,7 @@ io.on('connection', function(socket){
             guessed[sockets_map[players_in_a_room[p_rooms[socket.id]][i]]] = false;
         }
         game_state[p_rooms[socket.id]] = data;
+        game_state[p_rooms[socket.id]].action = "drawing";
         io.to(p_rooms[socket.id]).emit("game_state",{round: data.round,action: "drawing",curr_PIR: data.curr_PIR,words: word_format(data.words),artist_index: data.artist_index});
         io.to(sockets_map[game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]]).emit("game_state",{round: data.round,action: "drawing",curr_PIR: data.curr_PIR,words: data.words,artist_index: data.artist_index});
         io.to(p_rooms[socket.id]).emit("clock_start",{cur_time: new Date().getTime()});
@@ -238,6 +244,7 @@ io.on('connection', function(socket){
            else{
             delete game_state[p_rooms[socket.id]];
             io.to(p_rooms[socket.id]).emit("game_ended",{scores: scores});
+            started[p_rooms[socket.id]] = false;
            }
            //b kick_map[]
            if(kick_map[p_rooms[socket.id]]!==null){

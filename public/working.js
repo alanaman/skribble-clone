@@ -226,6 +226,10 @@ socket.on('room_valid',function(data){
     room_div.style.display = "none";
     create_pvt_room_wind.style.display="none";
     plr_list.style.display = "block";
+    if(data.started){
+      document.getElementById("votekick").style.display = "block";
+      // context.putImageData(data.image_data,0,0);
+    }
     if(!data.started){
       room_name = data.myroom;
       chat_div.style.display = "none";
@@ -235,6 +239,7 @@ socket.on('room_valid',function(data){
       lobby_div.style.display = "block";
     }
     else{
+      // console.log(data.action=="");
       if(data.action=="choosing"){
         canvas_clear();
         document.getElementById("words").style.display = "none";
@@ -264,6 +269,7 @@ socket.on('room_valid',function(data){
 //updating players in a room
 socket.on('players_list_update',function(data){
   plr_list = document.getElementById("playerlist");
+  
   plr_list.innerText = "";
   for(let i=1;i<=data.count;i++){
       plr_list.innerHTML += "<p>"+data.players[i-1]+" : "+data.scores[data.players[i-1]].reduce(function(a,b){return a+b;},0)+"</p>";
@@ -411,7 +417,8 @@ socket.on('start',function(){
   palette_div.style.display = "block";
   lobby_div.style.display = "none";
   plr_list.style.display = "block";
-  timer_div.style.display = "block"
+  timer_div.style.display = "block";
+  
   document.getElementById("headers").style.display = "block";
 });
 
@@ -428,14 +435,15 @@ myPics.addEventListener('mousedown', e => {
 });
 myPics.addEventListener('mousemove', e => {
   if (isDrawing === true) {
-    socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width});
+    socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width, image_data: context.getImageData(0,0,700,500)});
+
     x = e.offsetX;
     y = e.offsetY;
   }
 });
 window.addEventListener('mouseup', e => {
   if (isDrawing === true) {
-    socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width});
+    socket.emit('draw',{x1: x,y1: y,x2: e.offsetX,y2: e.offsetY,draw_color: curr_color,draw_width: curr_width, image_data: context.getImageData(0,0,700,500)});
     x = 0;
     y = 0;
     isDrawing = false;
@@ -529,6 +537,7 @@ white.addEventListener('click',function(){
 
 socket.on("leader_board",function(data){
   let leader_board = document.getElementById("leader_board");
+  
   leader_board.style.backgroundColor = "white";
   leader_board.style.padding = "2px";
   leader_board.innerHTML = "<h2> LEADERBOARD </h2>";
