@@ -17,7 +17,8 @@ var username = document.getElementById('username'),
     game_start_btn = document.getElementById("lobby"),
     word1_btn = document.getElementById("word1"),
     word2_btn = document.getElementById("word2"),
-    word3_btn = document.getElementById("word3");
+    word3_btn = document.getElementById("word3"),
+    chosen_word = document.getElementById("chosen_word");
 const myPics = document.getElementById('myPics');
 const context = myPics.getContext('2d');
 let room_data = {};
@@ -219,7 +220,7 @@ socket.on('players_list_update',function(data){
   plr_list = document.getElementById("playerlist");
   plr_list.innerText = "";
   for(let i=1;i<=data.count;i++){
-      plr_list.innerHTML += "<p>"+data.players[i-1]+"</p>";
+      plr_list.innerHTML += "<p>"+data.players[i-1]+" : "+data.scores[data.players[i-1]]+"</p>";
   }
 });
 //Adding newly created rooms to the drop-down box to all players 
@@ -250,6 +251,7 @@ socket.on('game_state',function(data){
       document.getElementById("action").innerText = "choose a word";
       document.getElementById("chat").style.display = "block";
       document.getElementById("chat-box").style.display = "block";
+      chosen_word.style.display = "none";
     }
     if(data.action=="drawing"){
       document.getElementById("words").style.display = "none";
@@ -258,6 +260,8 @@ socket.on('game_state',function(data){
       document.getElementById("action").innerText = "draw the word";
       document.getElementById("chat").style.display = "block";
       document.getElementById("chat-box").style.display = "block";
+      chosen_word.style.display = "block";
+      chosen_word.innerText = data.words;
     }
   }
   else{
@@ -269,6 +273,7 @@ socket.on('game_state',function(data){
       document.getElementById("action").innerText = "player is choosing a word";
       document.getElementById("chat").style.display = "block";
       document.getElementById("chat-box").style.display = "block";
+      chosen_word.style.display = "none";
     }
     if(data.action=="drawing"){
       document.getElementById("words").style.display = "none";
@@ -277,6 +282,8 @@ socket.on('game_state',function(data){
       document.getElementById("action").innerText = "guess the word";
       document.getElementById("chat").style.display = "block";
       document.getElementById("chat-box").style.display = "block";
+      chosen_word.style.display = "block";
+      chosen_word.innerText = data.words;
     }
   }
 });
