@@ -18,7 +18,8 @@ var username = document.getElementById('username'),
     word1_btn = document.getElementById("word1"),
     word2_btn = document.getElementById("word2"),
     word3_btn = document.getElementById("word3"),
-    chosen_word = document.getElementById("chosen_word");
+    chosen_word = document.getElementById("chosen_word"),
+    votekick_btn = document.getElementById("votekick_btn");
 const myPics = document.getElementById('myPics');
 const context = myPics.getContext('2d');
 let room_data = {};
@@ -122,6 +123,46 @@ word3_btn.addEventListener('click',function(){
   socket.emit('chosen',room_data)
 })
 
+votekick_btn.addEventListener('click',function(){
+  socket.emit('kick');
+})
+
+socket.on('you_kicked',function(data){
+  let reg_wind = document.getElementById("register_window");
+  let profile_wind = document.getElementById("user_prof");
+  let create_room_wind = document.getElementById("create_room");
+  let join_room_wind = document.getElementById("join_room");
+  let name_disp = document.getElementById("name_display");
+  let room_div = document.getElementById("room_list")
+  let chat_div = document.getElementById("chat");
+  let chat_box = document.getElementById("chat-box");
+  let drawing_div = document.getElementById("drawing-board");
+  let lobby_div = document.getElementById("lobby");
+  let plr_list = document.getElementById("playerlist");
+  let timer_div = document.getElementById("timer");
+  let votekick_div = document.getElementById("votekick");
+  document.getElementById("chosen_word").style.display = "none";
+  document.getElementById("join_private_room").style.display = "block";
+  document.getElementById("private_create_room").style.display = "block";
+  document.getElementById("leader_board").style.display = "block";
+  votekick_div.style.display = "none";
+  chat_div.style.display = "none";
+  chat_box.style.display = "none";
+  name_disp.innerText=username.value;
+  reg_wind.style.display = "none";
+  profile_wind.style.display = "block";
+  create_room_wind.style.display = "block";
+  join_room_wind.style.display = "block";
+  room_div.style.display = "block";
+  drawing_div.style.display = "none";
+  palette_div.style.display = "none";
+  lobby_div.style.display = "none";
+  plr_list.style.display = "none";
+  timer_div.style.display = "none"
+  document.getElementById("headers").style.display = "none";
+  socket.emit("kick_me",{room: data.room});
+  alert("You are KICKED!!!!!!!!!!!! xD \n Wo/Manners maketh Wo/Man");
+})
 
 //Taking a valid user to the lobby to create or join a room
 socket.on('validation',function(data){
@@ -244,6 +285,7 @@ socket.on('erase_choices',function(data){
 socket.on('game_state',function(data){
   console.log(data);
   room_data=data;
+  document.getElementById("round_no").innerText = "Round no. " + data.round;
   if(data.curr_PIR[data.artist_index]==username.value){
     if(data.action=="choosing"){
       canvas_clear();
@@ -320,7 +362,7 @@ function watch(countDownDate,timer){
 //Creating timer
 
 socket.on('clock_tick',function(data){
-  console.log(data);
+  // console.log(data);
   document.getElementById("timer").style.display = 'block';
   document.getElementById("timer").innerText =  data.sec.toString() + " s";
 })
@@ -355,6 +397,8 @@ socket.on('start',function(){
   let lobby_div = document.getElementById("lobby");
   let plr_list = document.getElementById("playerlist");
   let timer_div = document.getElementById("timer");
+  let votekick_div = document.getElementById("votekick");
+  votekick_div.style.display = "block";
   chat_div.style.display = "block";
   chat_box.style.display = "block";
   name_disp.innerText=username.value;
@@ -508,6 +552,8 @@ socket.on('game_ended',function(data){
   let lobby_div = document.getElementById("lobby");
   let plr_list = document.getElementById("playerlist");
   let timer_div = document.getElementById("timer");
+  let votekick_div = document.getElementById("votekick");
+  votekick_div.style.display = "none";
   chat_div.style.display = "none";
   chat_box.style.display = "none";
   name_disp.innerText=username.value;

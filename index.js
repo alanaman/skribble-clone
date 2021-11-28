@@ -2,6 +2,7 @@ var express = require('express');
 var socket = require('socket.io');
 var fs = require('fs');
 const nodemon = require('nodemon');
+// const { count } = require('console');
 //App setup
 var app = express();
 var server = app.listen(3999, function(){
@@ -52,7 +53,8 @@ started = {};           //game started in a room or not
 game_state = {};        //state of a started game
 scores = {};            //socket.id -> scores mapping [round1 , r2, r3]
 guess_count = {};       //room -> correct guesses of words(resets to zero after evry turn)
-guessed = {};
+guessed = {};           //username -> 
+kick_map = {};          //room _>jhk
 
 var active = {};
 var init_time = {};
@@ -87,6 +89,7 @@ io.on('connection', function(socket){
             players_in_a_room[data.roomname]=[];
             players_in_a_room[data.roomname].push(players[socket.id]);
             socket.join(data.roomname);
+            kick_map[data.roomname] = null;
             count[data.roomname] = 1;
             room_keys[data.roomname] = data.room_key;
             creator_room[data.roomname]=players[socket.id];
@@ -143,7 +146,7 @@ io.on('connection', function(socket){
     });
 
     socket.on("chat-msg",function(data) {
-        if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]!==players[socket.id] && !guessed[socket.id]){
+        if(game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]!==players[socket.id] && !guessed[socket.id] && game_state[p_rooms[socket.id]].action=="drawing"){
             if(game_state[p_rooms[socket.id]].words.toLowerCase()==(data.msg.toLowerCase())){
                 io.to(p_rooms[socket.id]).emit("chat-msg",{user: players[socket.id],msg : players[socket.id] + " guessed correctly"});
                 if(!guessed[socket.id]){
@@ -161,11 +164,11 @@ io.on('connection', function(socket){
     });
 
     socket.on("draw",function(data){
-        if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]==players[socket.id]) io.to(p_rooms[socket.id]).emit("draw",data);
+        if(game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]==players[socket.id]) io.to(p_rooms[socket.id]).emit("draw",data);
     });
 
     socket.on("clear",function(){
-        if(players_in_a_room[game_state[p_rooms[socket.id]].artist_index]==players[socket.id]) io.to(p_rooms[socket.id]).emit("clear")
+        if(game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]==players[socket.id]) io.to(p_rooms[socket.id]).emit("clear")
     });
     
     socket.on('start_game',function(){
@@ -191,16 +194,19 @@ io.on('connection', function(socket){
 
     socket.on('chosen',function(data){
         console.log(data);
+        console.log(p_rooms[socket.id]);
+        console.log(players[socket.id]);
         for(let i=0;i<players_in_a_room[p_rooms[socket.id]].length;i++){
             guessed[sockets_map[players_in_a_room[p_rooms[socket.id]][i]]] = false;
         }
         game_state[p_rooms[socket.id]] = data;
         io.to(p_rooms[socket.id]).emit("game_state",{round: data.round,action: "drawing",curr_PIR: data.curr_PIR,words: word_format(data.words),artist_index: data.artist_index});
-        io.to(sockets_map[players_in_a_room[p_rooms[socket.id]][data.artist_index]]).emit("game_state",{round: data.round,action: "drawing",curr_PIR: data.curr_PIR,words: data.words,artist_index: data.artist_index});
+        io.to(sockets_map[game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]]).emit("game_state",{round: data.round,action: "drawing",curr_PIR: data.curr_PIR,words: data.words,artist_index: data.artist_index});
         io.to(p_rooms[socket.id]).emit("clock_start",{cur_time: new Date().getTime()});
         
         setTimeout(function(){
-            scores[players_in_a_room[p_rooms[socket.id]][data.artist_index]][data.round-1] += Math.floor(guess_count[p_rooms[socket.id]]*15/count[p_rooms[socket.id]]);
+            
+            scores[game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index]][data.round-1] += Math.floor(guess_count[p_rooms[socket.id]]*15/count[p_rooms[socket.id]]);
             guess_count[p_rooms[socket.id]] = 0;
             io.to(data.room).emit('players_list_update',{players : players_in_a_room[data.room],count : count[data.room],scores: scores});
            if(data.curr_PIR.length>(data.artist_index+1)){
@@ -233,6 +239,23 @@ io.on('connection', function(socket){
             delete game_state[p_rooms[socket.id]];
             io.to(p_rooms[socket.id]).emit("game_ended",{scores: scores});
            }
+           //b kick_map[]
+           if(kick_map[p_rooms[socket.id]]!==null){
+            // console.log("ttt");
+            let kicked = kick_map[p_rooms[socket.id]];
+            kick_map[p_rooms[socket.id]] = null;
+            // let user = players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index];
+            players_in_a_room[p_rooms[socket.id]].splice(game_state[p_rooms[socket.id].artist_index],1);
+            console.log(players_in_a_room[p_rooms[socket.id]]);
+            io.to(p_rooms[socket.id]).emit('players_list_update',{players : players_in_a_room[p_rooms[socket.id]],count : count[p_rooms[socket.id]],scores: scores});
+            count[p_rooms[socket.id]]--;
+            // delete p_rooms[sockets_map[kicked]];
+            if(kicked==creator_room[p_rooms[socket.id]]){
+                // delete players[socket.id];
+                creator_room[p_rooms[socket.id]]=players_in_a_room[p_rooms[socket.id]][0];
+            }
+            console.log(kicked);
+        }
         },30000);
     });
 
@@ -240,8 +263,34 @@ io.on('connection', function(socket){
         watch(data.cur_time,30);
     })
 
-
+    socket.on('kick',function(){
+        if(players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index]!=players[socket.id]){
+            kick_map[p_rooms[socket.id]] = players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index];
+            // console.log("ttt");
+            let user = players_in_a_room[p_rooms[socket.id]][game_state[p_rooms[socket.id]].artist_index];
+            // players_in_a_room[p_rooms[socket.id]].splice([game_state[p_rooms[socket.id]].artist_index],1);
+            // console.log(players_in_a_room[p_rooms[socket.id]]);
+            // io.to(p_rooms[socket.id]).emit('players_list_update',{players : players_in_a_room[p_rooms[socket.id]],count : count[p_rooms[socket.id]],scores: scores});
+            // count[p_rooms[socket.id]]--;
+            // // delete p_rooms[sockets_map[user]];
+            // if(user==creator_room[p_rooms[socket.id]]){
+            //     // delete players[socket.id];
+            //     creator_room[p_rooms[socket.id]]=players_in_a_room[p_rooms[socket.id]][0];
+            // }
+            // console.log(user);
+            io.to(sockets_map[user]).emit('you_kicked',{room: p_rooms[socket.id]});
+            // game_state[p_rooms[socket.id]].curr_PIR.splice(game_state[p_rooms[socket.id]].artist_index,1)
+        }
+    })
+    
+    socket.on('kick_me',function(data){
+        io.to(data.room).emit('chat-msg',{user: players[socket.id],msg : "Kicked"});
+        socket.leave(data.room);
+    })
+    
     socket.on('disconnect',()=>{
+        
+        // delete game_state[p_rooms[socket.id]].curr_PIR[game_state[p_rooms[socket.id]].artist_index];
         if(p_rooms[socket.id]!=null){
             const ind =  players_in_a_room[p_rooms[socket.id]].indexOf(players[socket.id]);
             count[p_rooms[socket.id]] -= 1;
