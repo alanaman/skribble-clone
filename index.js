@@ -2,7 +2,6 @@ var express = require('express');
 var socket = require('socket.io');
 var fs = require('fs');
 const nodemon = require('nodemon');
-// const { count } = require('console');
 //App setup
 var app = express();
 var server = app.listen(3999, function(){
